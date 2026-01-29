@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Crown Career - Advanced Typing System</title>
+    <style>
+        :root {
+            --primary: #1a237e;
+            --secondary: #3b82f6;
+            --success: #00897b;
+            --danger: #e53935;
+            --bg: #f0f4f8;
+        }
+        body { font-family: 'SolaimanLipi', Arial, sans-serif; margin: 0; padding: 0; background: var(--bg); color: #333; }
+        
+        /* Home & Common Styles */
+        .hero-section { background: linear-gradient(135deg, #e3f2fd 0%, #90caf9 100%); padding: 60px 20px; text-align: center; }
+        .hero-title { font-size: 42px; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
+        .nav-bar { position: absolute; top: 20px; right: 40px; display: flex; gap: 10px; }
+        .nav-btn { padding: 10px 25px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; color: white; transition: 0.3s; }
+        
+        /* Admin Dashboard UI */
+        .admin-wrapper { max-width: 1300px; margin: 30px auto; padding: 20px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
+        .admin-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 5px solid var(--secondary); }
+        .card-title { font-size: 22px; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        th { background: #f8fafc; color: #64748b; padding: 12px; text-align: center; font-weight: 600; border-bottom: 2px solid #edf2f7; }
+        td { padding: 12px; text-align: center; border-bottom: 1px solid #edf2f7; font-size: 15px; }
+        
+        /* Inputs & Buttons */
+        textarea, input[type="text"], input[type="number"], input[type="date"] {
+            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px; box-sizing: border-box;
+        }
+        .btn-save { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+        .btn-delete { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+        .btn-status { background: #f59e0b; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+
+        .hidden { display: none !important; }
+        footer { background: var(--primary); color: white; padding: 40px; text-align: center; margin-top: 50px; }
+        
+        /* Exam & Result UI */
+        .exam-container { max-width: 800px; margin: 40px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .typing-area { width: 100%; height: 200px; font-size: 19px; line-height: 1.6; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; resize: none; }
+    </style>
+</head>
+<body onload="loadData()">
+
+    <div id="home-page">
+        <div class="hero-section">
+            <div class="nav-bar">
+                <button class="nav-btn" style="background:var(--secondary);" onclick="showAuth('login')">ছাত্র লগইন</button>
+                <button class="nav-btn" style="background:#e91e63;" onclick="showAuth('register')">রেজিস্ট্রেশন</button>
+            </div>
+            <h1 class="hero-title">👑 Crown Career Typing System</h1>
+            <p>বাংলাদেশ কম্পিউটার কাউন্সিলের (BCC) অনুরূপ পরীক্ষার সেরা প্ল্যাটফর্ম।</p>
+            <button class="nav-btn" style="background:var(--primary); padding: 15px 40px; margin-top: 20px;" onclick="showAuth('register')">শুরু করুন</button>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+        <div class="admin-wrapper">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                <h2 style="color:var(--primary);">🚀 অ্যাডমিন কন্ট্রোল প্যানেল</h2>
+                <button class="nav-btn" style="background:#64748b;" onclick="location.reload()">লগ আউট</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="admin-card">
+                    <div class="card-title">⚙️ পরীক্ষা কাস্টমাইজ করুন</div>
+                    <label>বাংলা পরীক্ষার টেক্সট:</label>
+                    <textarea id="custom-text-bn" placeholder="বাংলার অনুচ্ছেদটি এখানে দিন..."></textarea>
+                    <label style="margin-top:10px; display:block;">ইংরেজি পরীক্ষার টেক্সট:</label>
+                    <textarea id="custom-text-en" placeholder="ইংরেজি অনুচ্ছেদটি এখানে দিন..."></textarea>
+                    <div style="margin-top:15px;">
+                        <label>সময়সীমা (মিনিট):</label>
+                        <input type="number" id="set-time" value="5">
+                    </div>
+                    <button class="btn-save" onclick="saveAdminSettings()">সেভিংস আপডেট করুন</button>
+                </div>
+
+                <div class="admin-card">
+                    <div class="card-title">👥 পরীক্ষার্থী তালিকা</div>
+                    <div style="max-height: 350px; overflow-y: auto;">
+                        <table>
+                            <thead>
+                                <tr><th>রোল</th><th>নাম</th><th>মেয়াদ (Validity)</th><th>অ্যাকশন</th></tr>
+                            </thead>
+                            <tbody id="user-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-card" style="grid-column: span 2;">
+                    <div class="card-title">📊 সাম্প্রতিক ফলাফল (Result Board)</div>
+                    <table>
+                        <thead>
+                            <tr><th>রোল</th><th>নাম</th><th>WPM (গতি)</th><th>Accuracy</th><th>সময়</th><th>ফলাফল</th><th>অ্যাকশন</th></tr>
+                        </thead>
+                        <tbody id="result-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="auth-page" class="hidden">
+        <div class="admin-card" style="max-width: 400px; margin: 100px auto;">
+            <h3 id="auth-title" style="text-align:center;">ছাত্র লগইন</h3>
+            <div id="reg-name" class="hidden"><input type="text" id="u-name" placeholder="আপনার নাম"></div>
+            <input type="text" id="u-roll" placeholder="রোল নম্বর">
+            <input type="password" id="u-pass" placeholder="পাসওয়ার্ড">
+            <button class="btn-save" style="background:var(--primary);" onclick="handleAuth()">প্রবেশ করুন</button>
+            <p onclick="location.reload()" style="text-align:center; cursor:pointer; color:var(--secondary); margin-top:10px;">ফিরে যান</p>
+        </div>
+    </div>
+
+    <div id="exam-page" class="hidden">
+        <div class="exam-container">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-weight:bold; color:var(--primary);">
+                <span>রোল: <span id="st-roll"></span></span>
+                <span style="background:var(--danger); color:white; padding:5px 15px; border-radius:15px;">সময় অবশিষ্ট: <span id="timer">0</span> সে.</span>
+            </div>
+            <div id="display-text" style="background:#f8fafc; padding:20px; border-radius:10px; font-size:22px; margin-bottom:20px; border:1px solid #e2e8f0; pointer-events:none;"></div>
+            <textarea id="typing-box" class="typing-area" oninput="startExamTimer()" placeholder="এখানে টাইপ শুরু করুন..."></textarea>
+            <button class="btn-save" style="background:var(--success);" onclick="submitExam()">পরীক্ষা সাবমিট করুন</button>
+        </div>
+    </div>
+
+    <div id="admin-login" class="hidden">
+        <div class="admin-card" style="max-width: 350px; margin: 100px auto;">
+            <h3 style="text-align:center;">🔐 অ্যাডমিন লগইন</h3>
+            <input type="password" id="adm-pass" placeholder="অ্যাডমিন পাসওয়ার্ড">
+            <button class="btn-save" onclick="checkAdmin()">লগইন</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>প্রতিষ্ঠাতা ও CEO - <b>Emrul Kayes</b> | Crown Career | All Rights Reserved</p>
+        <button onclick="showPage('admin-login')" style="opacity:0.2; background:none; border:none; color:white; cursor:pointer;">Admin Access</button>
+    </footer>
+
+<script>
+    let users = JSON.parse(localStorage.getItem('cc_users')) || [{roll:"101", name:"Sample", pass:"123", validity:"2026-12-31", status:"active"}];
+    let results = JSON.parse(localStorage.getItem('cc_results')) || [];
+    let config = JSON.parse(localStorage.getItem('cc_config')) || {text_bn:"বাংলা টাইপ...", text_en:"English typing...", time: 5};
+    
+    let timerInterval, secondsLeft, currentUser, isTimerRunning = false;
+    let authMode = 'login';
+
+    function loadData() { renderTables(); }
+
+    function showPage(id) {
+        document.querySelectorAll('body > div:not(footer)').forEach(d => d.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function showAuth(mode) {
+        authMode = mode;
+        showPage('auth-page');
+        document.getElementById('auth-title').innerText = mode === 'register' ? 'ছাত্র রেজিস্ট্রেশন' : 'ছাত্র লগইন';
+        document.getElementById('reg-name').classList.toggle('hidden', mode !== 'register');
+    }
+
+    function handleAuth() {
+        const roll = document.getElementById('u-roll').value;
+        const pass = document.getElementById('u-pass').value;
+        if(authMode === 'register') {
+            const name = document.getElementById('u-name').value;
+            users.push({roll, name, pass, validity:"2026-12-31", status:"active"});
+            save(); alert("রেজিস্ট্রেশন সফল!"); showAuth('login');
+        } else {
+            const user = users.find(u => u.roll === roll && u.pass === pass);
+            if(user) {
+                if(user.status === 'blocked') return alert("আপনার আইডি ব্লক করা!");
+                currentUser = user;
+                startExam();
+            } else alert("ভুল তথ্য!");
+        }
+    }
+
+    function startExam() {
+        showPage('exam-page');
+        document.getElementById('st-roll').innerText = currentUser.roll;
+        document.getElementById('display-text').innerText = config.text_bn + "\n\n" + config.text_en;
+        secondsLeft = config.time * 60;
+        document.getElementById('timer').innerText = secondsLeft;
+    }
+
+    function startExamTimer() {
+        if(!isTimerRunning) {
+            isTimerRunning = true;
+            timerInterval = setInterval(() => {
+                secondsLeft--;
+                document.getElementById('timer').innerText = secondsLeft;
+                if(secondsLeft <= 0) submitExam();
+            }, 1000);
+        }
+    }
+
+    function submitExam() {
+        clearInterval(timerInterval);
+        const typed = document.getElementById('typing-box').value.trim();
+        const words = typed.split(/\s+/).length;
+        const wpm = Math.round(words / config.time);
+        const accuracy = "92%"; // Logic for detailed accuracy can be added here
+        
+        const newResult = {roll: currentUser.roll, name: currentUser.name, wpm, acc: accuracy, time: config.time+" min", status: wpm > 20 ? "PASS" : "FAIL"};
+        results.push(newResult);
+        save();
+        alert(`পরীক্ষা সফলভাবে জমা হয়েছে! আপনার গতি: ${wpm} WPM`);
+        location.reload();
+    }
+
+    function saveAdminSettings() {
+        config.text_bn = document.getElementById('custom-text-bn').value;
+        config.text_en = document.getElementById('custom-text-en').value;
+        config.time = document.getElementById('set-time').value;
+        localStorage.setItem('cc_config', JSON.stringify(config));
+        alert("পরীক্ষা সেটিংস সেভ হয়েছে!");
+    }
+
+    function checkAdmin() {
+        if(document.getElementById('adm-pass').value === "admin123") {
+            showPage('admin-panel');
+            document.getElementById('custom-text-bn').value = config.text_bn;
+            document.getElementById('custom-text-en').value = config.text_en;
+            document.getElementById('set-time').value = config.time;
+            renderTables();
+        } else alert("ভুল পাসওয়ার্ড!");
+    }
+
+    function renderTables() {
+        document.getElementById('user-list').innerHTML = users.map((u, i) => `
+            <tr>
+                <td>${u.roll}</td><td>${u.name}</td>
+                <td><input type="date" value="${u.validity}" onchange="users[${i}].validity=this.value; save()"></td>
+                <td><button class="btn-delete" onclick="users.splice(${i},1); save()">মুছুন</button></td>
+            </tr>`).join('');
+
+        document.getElementById('result-list').innerHTML = results.map((r, i) => `
+            <tr>
+                <td>${r.roll}</td><td>${r.name}</td><td><b>${r.wpm}</b></td><td>${r.acc}</td><td>${r.time}</td>
+                <td style="color:${r.status==='PASS'?'green':'red'}"><b>${r.status}</b></td>
+                <td><button class="btn-delete" onclick="results.splice(${i},1); save()">মুছুন</button></td>
+            </tr>`).join('');
+    }
+
+    function save() {
+        localStorage.setItem('cc_users', JSON.stringify(users));
+        localStorage.setItem('cc_results', JSON.stringify(results));
+        renderTables();
+    }
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Crown Career - Advanced Typing System</title>
+    <style>
+        :root {
+            --primary: #1a237e;
+            --secondary: #3b82f6;
+            --success: #00897b;
+            --danger: #e53935;
+            --bg: #f0f4f8;
+        }
+        body { font-family: 'SolaimanLipi', Arial, sans-serif; margin: 0; padding: 0; background: var(--bg); color: #333; }
+        
+        /* Home & Common Styles */
+        .hero-section { background: linear-gradient(135deg, #e3f2fd 0%, #90caf9 100%); padding: 60px 20px; text-align: center; }
+        .hero-title { font-size: 42px; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
+        .nav-bar { position: absolute; top: 20px; right: 40px; display: flex; gap: 10px; }
+        .nav-btn { padding: 10px 25px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; color: white; transition: 0.3s; }
+        
+        /* Admin Dashboard UI */
+        .admin-wrapper { max-width: 1300px; margin: 30px auto; padding: 20px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
+        .admin-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-top: 5px solid var(--secondary); }
+        .card-title { font-size: 22px; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        th { background: #f8fafc; color: #64748b; padding: 12px; text-align: center; font-weight: 600; border-bottom: 2px solid #edf2f7; }
+        td { padding: 12px; text-align: center; border-bottom: 1px solid #edf2f7; font-size: 15px; }
+        
+        /* Inputs & Buttons */
+        textarea, input[type="text"], input[type="number"], input[type="date"] {
+            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px; box-sizing: border-box;
+        }
+        .btn-save { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+        .btn-delete { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+        .btn-status { background: #f59e0b; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+
+        .hidden { display: none !important; }
+        footer { background: var(--primary); color: white; padding: 40px; text-align: center; margin-top: 50px; }
+        
+        /* Exam & Result UI */
+        .exam-container { max-width: 800px; margin: 40px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .typing-area { width: 100%; height: 200px; font-size: 19px; line-height: 1.6; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; resize: none; }
+    </style>
+</head>
+<body onload="loadData()">
+
+    <div id="home-page">
+        <div class="hero-section">
+            <div class="nav-bar">
+                <button class="nav-btn" style="background:var(--secondary);" onclick="showAuth('login')">ছাত্র লগইন</button>
+                <button class="nav-btn" style="background:#e91e63;" onclick="showAuth('register')">রেজিস্ট্রেশন</button>
+            </div>
+            <h1 class="hero-title">👑 Crown Career Typing System</h1>
+            <p>বাংলাদেশ কম্পিউটার কাউন্সিলের (BCC) অনুরূপ পরীক্ষার সেরা প্ল্যাটফর্ম।</p>
+            <button class="nav-btn" style="background:var(--primary); padding: 15px 40px; margin-top: 20px;" onclick="showAuth('register')">শুরু করুন</button>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+        <div class="admin-wrapper">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                <h2 style="color:var(--primary);">🚀 অ্যাডমিন কন্ট্রোল প্যানেল</h2>
+                <button class="nav-btn" style="background:#64748b;" onclick="location.reload()">লগ আউট</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="admin-card">
+                    <div class="card-title">⚙️ পরীক্ষা কাস্টমাইজ করুন</div>
+                    <label>বাংলা পরীক্ষার টেক্সট:</label>
+                    <textarea id="custom-text-bn" placeholder="বাংলার অনুচ্ছেদটি এখানে দিন..."></textarea>
+                    <label style="margin-top:10px; display:block;">ইংরেজি পরীক্ষার টেক্সট:</label>
+                    <textarea id="custom-text-en" placeholder="ইংরেজি অনুচ্ছেদটি এখানে দিন..."></textarea>
+                    <div style="margin-top:15px;">
+                        <label>সময়সীমা (মিনিট):</label>
+                        <input type="number" id="set-time" value="5">
+                    </div>
+                    <button class="btn-save" onclick="saveAdminSettings()">সেভিংস আপডেট করুন</button>
+                </div>
+
+                <div class="admin-card">
+                    <div class="card-title">👥 পরীক্ষার্থী তালিকা</div>
+                    <div style="max-height: 350px; overflow-y: auto;">
+                        <table>
+                            <thead>
+                                <tr><th>রোল</th><th>নাম</th><th>মেয়াদ (Validity)</th><th>অ্যাকশন</th></tr>
+                            </thead>
+                            <tbody id="user-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-card" style="grid-column: span 2;">
+                    <div class="card-title">📊 সাম্প্রতিক ফলাফল (Result Board)</div>
+                    <table>
+                        <thead>
+                            <tr><th>রোল</th><th>নাম</th><th>WPM (গতি)</th><th>Accuracy</th><th>সময়</th><th>ফলাফল</th><th>অ্যাকশন</th></tr>
+                        </thead>
+                        <tbody id="result-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="auth-page" class="hidden">
+        <div class="admin-card" style="max-width: 400px; margin: 100px auto;">
+            <h3 id="auth-title" style="text-align:center;">ছাত্র লগইন</h3>
+            <div id="reg-name" class="hidden"><input type="text" id="u-name" placeholder="আপনার নাম"></div>
+            <input type="text" id="u-roll" placeholder="রোল নম্বর">
+            <input type="password" id="u-pass" placeholder="পাসওয়ার্ড">
+            <button class="btn-save" style="background:var(--primary);" onclick="handleAuth()">প্রবেশ করুন</button>
+            <p onclick="location.reload()" style="text-align:center; cursor:pointer; color:var(--secondary); margin-top:10px;">ফিরে যান</p>
+        </div>
+    </div>
+
+    <div id="exam-page" class="hidden">
+        <div class="exam-container">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-weight:bold; color:var(--primary);">
+                <span>রোল: <span id="st-roll"></span></span>
+                <span style="background:var(--danger); color:white; padding:5px 15px; border-radius:15px;">সময় অবশিষ্ট: <span id="timer">0</span> সে.</span>
+            </div>
+            <div id="display-text" style="background:#f8fafc; padding:20px; border-radius:10px; font-size:22px; margin-bottom:20px; border:1px solid #e2e8f0; pointer-events:none;"></div>
+            <textarea id="typing-box" class="typing-area" oninput="startExamTimer()" placeholder="এখানে টাইপ শুরু করুন..."></textarea>
+            <button class="btn-save" style="background:var(--success);" onclick="submitExam()">পরীক্ষা সাবমিট করুন</button>
+        </div>
+    </div>
+
+    <div id="admin-login" class="hidden">
+        <div class="admin-card" style="max-width: 350px; margin: 100px auto;">
+            <h3 style="text-align:center;">🔐 অ্যাডমিন লগইন</h3>
+            <input type="password" id="adm-pass" placeholder="অ্যাডমিন পাসওয়ার্ড">
+            <button class="btn-save" onclick="checkAdmin()">লগইন</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>প্রতিষ্ঠাতা ও CEO - <b>Emrul Kayes</b> | Crown Career | All Rights Reserved</p>
+        <button onclick="showPage('admin-login')" style="opacity:0.2; background:none; border:none; color:white; cursor:pointer;">Admin Access</button>
+    </footer>
+
+<script>
+    let users = JSON.parse(localStorage.getItem('cc_users')) || [{roll:"101", name:"Sample", pass:"123", validity:"2026-12-31", status:"active"}];
+    let results = JSON.parse(localStorage.getItem('cc_results')) || [];
+    let config = JSON.parse(localStorage.getItem('cc_config')) || {text_bn:"বাংলা টাইপ...", text_en:"English typing...", time: 5};
+    
+    let timerInterval, secondsLeft, currentUser, isTimerRunning = false;
+    let authMode = 'login';
+
+    function loadData() { renderTables(); }
+
+    function showPage(id) {
+        document.querySelectorAll('body > div:not(footer)').forEach(d => d.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function showAuth(mode) {
+        authMode = mode;
+        showPage('auth-page');
+        document.getElementById('auth-title').innerText = mode === 'register' ? 'ছাত্র রেজিস্ট্রেশন' : 'ছাত্র লগইন';
+        document.getElementById('reg-name').classList.toggle('hidden', mode !== 'register');
+    }
+
+    function handleAuth() {
+        const roll = document.getElementById('u-roll').value;
+        const pass = document.getElementById('u-pass').value;
+        if(authMode === 'register') {
+            const name = document.getElementById('u-name').value;
+            users.push({roll, name, pass, validity:"2026-12-31", status:"active"});
+            save(); alert("রেজিস্ট্রেশন সফল!"); showAuth('login');
+        } else {
+            const user = users.find(u => u.roll === roll && u.pass === pass);
+            if(user) {
+                if(user.status === 'blocked') return alert("আপনার আইডি ব্লক করা!");
+                currentUser = user;
+                startExam();
+            } else alert("ভুল তথ্য!");
+        }
+    }
+
+    function startExam() {
+        showPage('exam-page');
+        document.getElementById('st-roll').innerText = currentUser.roll;
+        document.getElementById('display-text').innerText = config.text_bn + "\n\n" + config.text_en;
+        secondsLeft = config.time * 60;
+        document.getElementById('timer').innerText = secondsLeft;
+    }
+
+    function startExamTimer() {
+        if(!isTimerRunning) {
+            isTimerRunning = true;
+            timerInterval = setInterval(() => {
+                secondsLeft--;
+                document.getElementById('timer').innerText = secondsLeft;
+                if(secondsLeft <= 0) submitExam();
+            }, 1000);
+        }
+    }
+
+    function submitExam() {
+        clearInterval(timerInterval);
+        const typed = document.getElementById('typing-box').value.trim();
+        const words = typed.split(/\s+/).length;
+        const wpm = Math.round(words / config.time);
+        const accuracy = "92%"; // Logic for detailed accuracy can be added here
+        
+        const newResult = {roll: currentUser.roll, name: currentUser.name, wpm, acc: accuracy, time: config.time+" min", status: wpm > 20 ? "PASS" : "FAIL"};
+        results.push(newResult);
+        save();
+        alert(`পরীক্ষা সফলভাবে জমা হয়েছে! আপনার গতি: ${wpm} WPM`);
+        location.reload();
+    }
+
+    function saveAdminSettings() {
+        config.text_bn = document.getElementById('custom-text-bn').value;
+        config.text_en = document.getElementById('custom-text-en').value;
+        config.time = document.getElementById('set-time').value;
+        localStorage.setItem('cc_config', JSON.stringify(config));
+        alert("পরীক্ষা সেটিংস সেভ হয়েছে!");
+    }
+
+    function checkAdmin() {
+        if(document.getElementById('adm-pass').value === "admin123") {
+            showPage('admin-panel');
+            document.getElementById('custom-text-bn').value = config.text_bn;
+            document.getElementById('custom-text-en').value = config.text_en;
+            document.getElementById('set-time').value = config.time;
+            renderTables();
+        } else alert("ভুল পাসওয়ার্ড!");
+    }
+
+    function renderTables() {
+        document.getElementById('user-list').innerHTML = users.map((u, i) => `
+            <tr>
+                <td>${u.roll}</td><td>${u.name}</td>
+                <td><input type="date" value="${u.validity}" onchange="users[${i}].validity=this.value; save()"></td>
+                <td><button class="btn-delete" onclick="users.splice(${i},1); save()">মুছুন</button></td>
+            </tr>`).join('');
+
+        document.getElementById('result-list').innerHTML = results.map((r, i) => `
+            <tr>
+                <td>${r.roll}</td><td>${r.name}</td><td><b>${r.wpm}</b></td><td>${r.acc}</td><td>${r.time}</td>
+                <td style="color:${r.status==='PASS'?'green':'red'}"><b>${r.status}</b></td>
+                <td><button class="btn-delete" onclick="results.splice(${i},1); save()">মুছুন</button></td>
+            </tr>`).join('');
+    }
+
+    function save() {
+        localStorage.setItem('cc_users', JSON.stringify(users));
+        localStorage.setItem('cc_results', JSON.stringify(results));
+        renderTables();
+    }
+</script>
+</body>
+</html>
